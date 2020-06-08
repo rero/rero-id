@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+#
+# RERO ID
+# Copyright (C) 2020 RERO.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>
+
+set -e
+
+
+script_path=$(dirname "$0")
+pipfile_lock_path="$script_path/../Pipfile.lock"
+
+if [ ! -f $pipfile_lock_path ]; then
+    echo "'Pipfile.lock' not found. Generating via 'pipenv lock --dev'..."
+    pipenv lock --dev
+fi
+
+# Installs all packages specified in Pipfile.lock
+pipenv sync --dev
+# Install application code and entrypoints from 'setup.py'
+pipenv run pip install -e $script_path/..
+# Build assets
+pipenv run invenio collect -v
+pipenv run invenio webpack buildall
+
+
