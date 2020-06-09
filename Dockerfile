@@ -24,17 +24,18 @@
 # image (built with Dockerfile.base) which only includes your Python
 # dependencies.
 
-ARG DEPENDENCIES_VERSION=latest
-FROM rero-id-base:${DEPENDENCIES_VERSION}
+ARG VERSION=latest
+FROM rero/rero-id-base:${VERSION}
 
-COPY ./ .
+USER 0
+
+COPY ./ ${WORKING_DIR}/src
+WORKDIR ${WORKING_DIR}/src
 COPY ./docker/uwsgi/ ${INVENIO_INSTANCE_PATH}
 
-RUN pip install . && \
-    invenio collect -v  && \
-    invenio webpack create && \
-    # --unsafe needed because we are running as root
-    invenio webpack install --unsafe && \
-    invenio webpack build
+RUN chown -R invenio:invenio ${WORKING_DIR}
 
-ENTRYPOINT [ "bash", "-c"]
+USER 1000
+
+ENV INVENIO_COLLECT_STORAGE='flask_collect.storage.file'
+RUN ./scripts/bootstrap --deploy

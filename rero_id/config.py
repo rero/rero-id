@@ -25,10 +25,11 @@ You overwrite and set instance-specific configuration by either:
 
 from __future__ import absolute_import, print_function
 
+import os
 from datetime import timedelta
 
 from invenio_app.config import APP_DEFAULT_SECURE_HEADERS
-from invenio_previewer.config import PREVIEWER_PREFERENCE as BASE_PREFERENCE
+from invenio_oauthclient.contrib import github, orcid
 
 
 def _(x):
@@ -40,6 +41,7 @@ def _(x):
 # =============
 #: Storage for ratelimiter.
 RATELIMIT_STORAGE_URL = 'redis://localhost:6379/3'
+RATELIMIT_ENABLED = False
 
 # I18N
 # ====
@@ -75,6 +77,7 @@ THEME_FRONTPAGE = True
 THEME_FRONTPAGE_TITLE = _('RERO ID')
 #: Frontpage template.
 THEME_FRONTPAGE_TEMPLATE = 'rero_id/frontpage.html'
+THEME_SEARCHBAR = False
 
 # Email configuration
 # ===================
@@ -86,7 +89,7 @@ MAIL_SUPPRESS_SEND = True
 # Assets
 # ======
 #: Static files collection method (defaults to copying files).
-COLLECT_STORAGE = 'flask_collect.storage.file'
+COLLECT_STORAGE = 'flask_collect.storage.link'
 
 # Accounts
 # ========
@@ -113,10 +116,6 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/2'
 #: Scheduled tasks configuration (aka cronjobs).
 CELERY_BEAT_SCHEDULE = {
-    'indexer': {
-        'task': 'invenio_indexer.tasks.process_bulk_queue',
-        'schedule': timedelta(minutes=5),
-    },
     'accounts': {
         'task': 'invenio_accounts.tasks.clean_session_table',
         'schedule': timedelta(minutes=60),
@@ -128,11 +127,6 @@ CELERY_BEAT_SCHEDULE = {
 #: Database URI including user and password
 SQLALCHEMY_DATABASE_URI = \
     'postgresql+psycopg2://rero-id:rero-id@localhost/rero-id'
-
-# JSONSchemas
-# ===========
-#: Hostname used in URLs for local JSONSchemas.
-JSONSCHEMAS_HOST = 'https://github.com/rero/rero-id'
 
 # Flask configuration
 # ===================
@@ -150,16 +144,12 @@ SESSION_COOKIE_SECURE = True
 #: provided, the allowed hosts variable is set to localhost. In production it
 #: should be set to the correct host and it is strongly recommended to only
 #: route correct hosts to the application.
-APP_ALLOWED_HOSTS = ['https://github.com/rero/rero-id', 'localhost', '127.0.0.1']
-
-# OAI-PMH
-# =======
-OAISERVER_ID_PREFIX = 'oai:https://github.com/rero/rero-id:'
-
-# Previewers
-# ==========
-#: Include IIIF preview for images.
-PREVIEWER_PREFERENCE = ['iiif_image'] + BASE_PREFERENCE
+APP_ALLOWED_HOSTS = [
+    'https://id.rero.ch',
+    'https://id.test.rero.ch',
+    'https://iddev.test.rero.ch',
+    'localhost', '127.0.0.1'
+]
 
 # Debug
 # =====
@@ -179,3 +169,27 @@ APP_DEFAULT_SECURE_HEADERS['content_security_policy'] = {
     'font-src': ["'self'", "data:", "https://fonts.gstatic.com",
                  "https://fonts.googleapis.com"],
 }
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# OAUTH
+# =====
+
+# TODO: remove this when https://github.com/inveniosoftware/
+# invenio-oauthclient/pull/211 will be integrated
+
+orcid.REMOTE_APP['params']['access_token_url'] = \
+    'https://pub.orcid.org/oauth/token'
+OAUTHCLIENT_REMOTE_APPS = dict(
+    github=github.REMOTE_APP,
+    orcid=orcid.REMOTE_APP
+)
+
+GITHUB_APP_CREDENTIALS = dict(
+    consumer_key=os.environ.get('GITHUB_CONSUMER_KEY'),
+    consumer_secret=os.environ.get('GITHUB_CONSUMER_SECRET')
+)
+
+ORCID_APP_CREDENTIALS = dict(
+    consumer_key=os.environ.get('ORCID_CONSUMER_KEY'),
+    consumer_secret=os.environ.get('ORCID_CONSUMER_SECRET'),
+)

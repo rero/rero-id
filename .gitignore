@@ -45,6 +45,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.env
 
 # end-to-end testing
 .e2e_screenshots

@@ -132,5 +132,4 @@ In addition to the normal ``docker-compose.yml``, this one will start:
 - UWSGI (application container)
 - Celery (background task worker)
 - Flower (Celery monitoring) -- http://127.0.0.1:5555
-- Kibana (Elasticsearch inspection) -- http://127.0.0.1:5601
 - RabbitMQ (message queue) -- http://guest:guest@127.0.0.1:15672

@@ -25,8 +25,7 @@ theme = WebpackBundle(
     __name__,
     'assets',
     entry={
-        'rero-id-theme': './scss/rero_id/theme.scss',
-        'rero-id-preview': './js/rero_id/previewer.js',
+        'rero-id-theme': './scss/rero_id/theme.scss'
     },
     dependencies={
         # add any additional npm dependencies here...

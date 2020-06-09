@@ -94,7 +94,6 @@ services:
       - archived_data:/opt/invenio/var/instance/archive
     links:
       - cache
-      - es
       - mq
       - db
   # Worker
@@ -107,7 +106,6 @@ services:
     image: rero-id
     links:
       - cache
-      - es
       - mq
       - db
     volumes:
@@ -121,14 +119,6 @@ services:
       service: flower
     links:
       - mq
-  # Inspect Elasticsearch indexes
-  # http://127.0.0.1:5601
-  kibana:
-    extends:
-      file: docker-services.yml
-      service: kibana
-    links:
-      - es
   # Base services
   cache:
     extends:
@@ -143,10 +133,6 @@ services:
     extends:
       file: docker-services.yml
       service: mq
-  es:
-    extends:
-      file: docker-services.yml
-      service: es
 volumes:
   static_data:
   uploaded_data:

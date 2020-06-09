@@ -63,6 +63,9 @@ setup(
         'invenio_i18n.translations': [
             'messages = rero_id',
         ],
+        'flask.commands': [
+            'apps = rero_id.cli:apps'
+        ]
     },
     classifiers=[
         'Environment :: Web Environment',

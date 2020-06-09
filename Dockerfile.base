@@ -14,14 +14,37 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
-#
-# Base image Dockerfile for rero-id application.
-#
-# This image installs all Python dependencies for your application. It's based
-# on CentOS 7 with Python 3 (https://github.com/inveniosoftware/docker-invenio)
-# and includes Pip, Pipenv, Node.js, NPM and some few standard libraries
-# Invenio usually needs.
+FROM python:3.7-slim-stretch
 
-FROM inveniosoftware/centos7-python:3.6
-COPY Pipfile Pipfile.lock ./
-RUN pipenv install --deploy --system
+# require debian packages
+RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get install --no-install-recommends -y git vim-tiny curl gcc gnupg libc6-dev && rm -rf /var/lib/apt/lists/*
+RUN pip install --upgrade setuptools wheel pip pipenv
+
+# # uwsgi uwsgitop uwsgi-tools
+
+# Install Node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN apt-get install --no-install-recommends -y nodejs && rm -rf /var/lib/apt/lists/*
+RUN npm install --silent node-sass@4.9.0 clean-css@3.4.19 uglify-js@2.7.3 requirejs@2.2.0 @angular/cli@7.0.4
+
+
+# Install Invenio
+ENV WORKING_DIR=/invenio
+ENV INVENIO_INSTANCE_PATH=${WORKING_DIR}/var/instance
+RUN mkdir -p ${INVENIO_INSTANCE_PATH}
+
+# copy everything inside /src
+RUN mkdir -p ${WORKING_DIR}/src
+COPY ./ ${WORKING_DIR}/src
+WORKDIR ${WORKING_DIR}/src
+
+# copy uwsgi config files
+COPY ./docker/uwsgi/ ${INVENIO_INSTANCE_PATH}
+
+# create user
+RUN useradd invenio --uid 1000  --home ${WORKING_DIR} && \
+    chown -R invenio:invenio ${WORKING_DIR} && \
+    chmod -R go+w ${WORKING_DIR}
+
+USER 1000
